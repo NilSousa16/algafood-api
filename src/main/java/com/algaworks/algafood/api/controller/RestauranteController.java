@@ -3,6 +3,7 @@ package com.algaworks.algafood.api.controller;
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -45,11 +46,11 @@ public class RestauranteController {
 	}
 
 	@GetMapping("/{restauranteId}")
-	public ResponseEntity<Restaurante> buscar(@PathVariable("restauranteId") Long id) {
-		Restaurante restaurante = cadastroRestaurante.buscar(id);
+	public ResponseEntity<Restaurante> buscar(@PathVariable("restauranteId") Long restauranteId) {
+		Optional<Restaurante> restaurante = cadastroRestaurante.buscar(restauranteId);
 
-		if (restaurante != null) {
-			return ResponseEntity.status(HttpStatus.OK).body(restaurante);
+		if (restaurante.isPresent()) {
+			return ResponseEntity.status(HttpStatus.OK).body(restaurante.get());
 		}
 
 		return ResponseEntity.notFound().build();
@@ -77,15 +78,15 @@ public class RestauranteController {
 	public ResponseEntity<?> atualizarParcial(@PathVariable Long restauranteId,
 			@RequestBody Map<String, Object> campos) {
 
-		Restaurante restauranteAtual = cadastroRestaurante.buscar(restauranteId);
+		Optional<Restaurante> restauranteAtual = cadastroRestaurante.buscar(restauranteId);
 
-		if (restauranteAtual == null) {
+		if (restauranteAtual.isEmpty()) {
 			return ResponseEntity.notFound().build();
 		}
 
-		merge(campos, restauranteAtual);
+		merge(campos, restauranteAtual.get());
 
-		return this.atualizar(restauranteId, restauranteAtual);
+		return this.atualizar(restauranteId, restauranteAtual.get());
 
 	}
 
@@ -107,7 +108,7 @@ public class RestauranteController {
 	}
 
 	@DeleteMapping("/{restauranteId}")
-	public ResponseEntity<Restaurante> remover(@PathVariable Long restauranteId) {
+	public ResponseEntity<?> remover(@PathVariable Long restauranteId) {
 		try {
 			cadastroRestaurante.excluir(restauranteId);
 			return ResponseEntity.noContent().build();
@@ -116,7 +117,7 @@ public class RestauranteController {
 			return ResponseEntity.notFound().build();
 
 		} catch (EntidadeEmUsoException e) {
-			return ResponseEntity.status(HttpStatus.CONFLICT).build();
+			return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
 		}
 	}
 }

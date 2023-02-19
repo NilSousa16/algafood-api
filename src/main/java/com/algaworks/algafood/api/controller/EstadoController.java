@@ -1,6 +1,7 @@
 package com.algaworks.algafood.api.controller;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -37,10 +38,10 @@ public class EstadoController {
 
 	@GetMapping("/{estadoId}")
 	public ResponseEntity<Estado> buscar(@PathVariable("estadoId") Long id) {
-		Estado estado = cadastroEstado.buscar(id);
+		Optional<Estado> estado = cadastroEstado.buscar(id);
 
-		if (estado != null) {
-			return ResponseEntity.status(HttpStatus.OK).body(estado);
+		if (estado.isPresent()) {
+			return ResponseEntity.status(HttpStatus.OK).body(estado.get());
 		}
 
 		return ResponseEntity.notFound().build();
@@ -60,16 +61,15 @@ public class EstadoController {
 		} catch (RecursoNaoEncontradaException e) {
 			return ResponseEntity.notFound().build();
 		}
-
 	}
-	
+
 	@DeleteMapping("/{estadoId}")
 	public ResponseEntity<?> remover(@PathVariable Long estadoId) {
 		try {
 			cadastroEstado.excluir(estadoId);
 			return ResponseEntity.noContent().build();
-			
-		}  catch (EntidadeNaoEncontradaException e) {
+
+		} catch (EntidadeNaoEncontradaException e) {
 			return ResponseEntity.notFound().build();
 
 		} catch (EntidadeEmUsoException e) {

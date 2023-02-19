@@ -1,6 +1,7 @@
 package com.algaworks.algafood.domain.service;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,35 +22,37 @@ public class CadastroEstadoService {
 	EstadoRepository estadoRepository;
 
 	public Estado salvar(Estado estado) {
-		return estadoRepository.salvar(estado);
+		return estadoRepository.save(estado);
 	}
 
-	public Estado buscar(Long estadoId) {
-		return estadoRepository.buscar(estadoId);
+	public Optional<Estado> buscar(Long estadoId) {
+		return estadoRepository.findById(estadoId);
 	}
 
 	public Estado atualizar(Long estadoId, Estado estado) {
-		Estado estadoAtual = estadoRepository.buscar(estadoId);
-		
-		if (estadoAtual == null) {
+		Optional<Estado> estadoAtual = estadoRepository.findById(estadoId);
+
+		if (estadoAtual.isPresent()) {
+			BeanUtils.copyProperties(estado, estadoAtual.get(), "id");
+
+			Estado estadoSalvo = estadoRepository.save(estadoAtual.get());
+
+			return estadoSalvo;
+			
+		} else {
 			throw new RecursoNaoEncontradaException(
 					String.format("Não existe cadastro de estado com código %d", estadoId));
 		}
-		
-		BeanUtils.copyProperties(estado, estadoAtual, "id");
-		
-		estadoAtual = estadoRepository.salvar(estadoAtual);
-		
-		return estadoAtual;
+
 	}
 
 	public List<Estado> listar() {
-		return estadoRepository.listar();
+		return estadoRepository.findAll();
 	}
-	
+
 	public void excluir(Long estadoId) {
 		try {
-			estadoRepository.remover(estadoId);
+			estadoRepository.deleteById(estadoId);
 		} catch (EmptyResultDataAccessException e) {
 			throw new EntidadeNaoEncontradaException(
 					String.format("Não existe um cadastro de estado com o código %d", estadoId));
